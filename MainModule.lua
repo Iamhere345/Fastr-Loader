@@ -1,7 +1,42 @@
 local MainModule = {}
 
-local MinimumLoaderVersion = 0.63
-local WarningLoaderVersion = 0.62
+--! this code is old and may not conform to best practise.
+-- todo cleanup this script
+-- looking back on this the PascalCase is killing me
+
+type svf2 = {major: number, minor: number, patch: number} --type for semantic version format 2.0.0
+
+local MinimumLoaderVersion: svf2 = {major = 0, minor = 1, fix = 0} --todo fastr is only now following SemVer 2.0.0 format, but this isn't yet
+local WarningLoaderVersion: svf2 = {major = 0, minor = 1, fix = 0}
+
+local function tosvf(version_str: string): svf2 --read a string that represents an svf2 type (e.g "1.0.0") and convert it to svf2
+	
+	local versionSplit = string.split(version_str, ".")
+
+	local major = tostring(versionSplit[1])
+	local minor = tostring(versionSplit[2])
+	local fix = tostring(versionSplit[3])
+
+	return {major, minor, fix}
+
+end
+
+local function cmpgt_svf(a: svf2, b: svf2) --cmpgt_svf: compare greater than sematic version format. This compares two svf2 vars and returns true if a >= b, otherwise it returns false
+    for i,n in pairs(a) do
+        if n > b[i] then
+            return true
+        end
+    end
+
+	for i,n in pairs(a) do
+		if n ~= b[i] then
+			return false
+		end
+	end
+
+    return true
+
+end
 
 local function CompileMenuWidgets(widgets,menu,MenuResources)
 
@@ -38,15 +73,13 @@ local function UpdateSettingsCompatability(Settings: table)
 	
 end
 
-local function CompileCoreCommandsEdits(Edits: table)
-	
-end
+function MainModule:init(root,loaderversion)
 
-MainModule.Initialise = function(root,Loaderversion)
+	loaderversion = tosvf(loaderversion)
 
-	if Loaderversion >= MinimumLoaderVersion then
+	if cmpgt_svf(loaderversion,MinimumLoaderVersion) then
 
-		if Loaderversion <= WarningLoaderVersion then
+		if not cmpgt_svf(loaderversion, WarningLoaderVersion) then
 			warn("your fastr loader is old and it is possible that it could become incompatable with fastr soon")
 		end
 
@@ -64,17 +97,17 @@ MainModule.Initialise = function(root,Loaderversion)
 
 			for i,v in pairs(root.Commands:GetChildren()) do
 				v.Parent = Cmds
-				wait(0.05)
+				task.wait(0.05)
 			end
 
 			for i,v in pairs(root.Resources:GetChildren()) do
 				v.Parent = Resources
-				wait(0.05)
+				task.wait(0.05)
 			end
 
 			for i,v in pairs(root.Remotes:GetChildren()) do
 				v.Parent = Remotes
-				wait(0.05)
+				task.wait(0.05)
 			end
 
 		else
@@ -99,7 +132,7 @@ MainModule.Initialise = function(root,Loaderversion)
 			root.CoreCommandsEdits.Parent = script.FastrPackage.Fastr_Main.Utils.MiscUtils
 		end
 		
-		wait(1)
+		task.wait(1)
 
 		for i,player in pairs(game.Players:GetPlayers()) do
 			local ui = script.FastrPackage.Fastr_UI:Clone()
@@ -109,12 +142,12 @@ MainModule.Initialise = function(root,Loaderversion)
 
 		script.FastrPackage.FastInstall.Disabled = false
 
-		script.FastrPackage:Clone().Parent = game.workspace
+		script.FastrPackage:Clone().Parent = workspace
 
 		script.FastrPackage:Destroy()
 
 	else
-		warn("your loader version in incompatable with the latest version of fastr in this update channel. check the faq for more info and how to fix this")
+		warn("your loader version in incompatable with the latest version of Fastr in this update channel. check the faq for more info and how to fix this")
 		script.Parent:Destroy()
 	end
 end
